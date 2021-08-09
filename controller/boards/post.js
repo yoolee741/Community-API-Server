@@ -5,42 +5,23 @@ const { verifyAccessToken } = require("../users/tokens");
 
 module.exports = {
   getList: async (req, res) => {
-    return res.status(200).send("deletePost!");
+    const list = await Board.findAll();
+    if (!list) {
+      return [];
+    } else {
+      res.status(200).send(list);
+    }
     /*
-- 생성된 게시물을 모두 불러옵니다.
-- 만약 게시물이 없을 시 빈 배열을 반환합니다.
-- Response의 user 객체의 경우  게시물을 작성한 유저의 닉네임만 가져옵니다.
-
-* 예시
-[
-	{
-		"id": 2,
-		"userId" : 1,
-		"user": {
-			"nickname": "팬더"
-		},
-		"title": "제목입니다2",
-		"content": "내용입니다2",
-		"like": 0,
-		"createdAt": "2021-08-01T06:02:00.000Z"
-	},
-	{
-		"id": 1,
-		"userId" : 1,
-		"user": {
-			"nickname": "팬더"
-		},
-		"title": "제목입니다",
-		"content": "내용입니다",
-		"like": 1,
-		"createdAt": "2021-08-01T02:02:00.000Z"
-	}
-]
-     */
+- 생성된 게시물을 모두 불러옵니다. [V]
+- 만약 게시물이 없을 시 빈 배열을 반환합니다. [V]
+- Response의 user 객체의 경우  게시물을 작성한 유저의 닉네임만 가져옵니다. [V]
+*/
   },
+
   getPost: async (req, res) => {
     return res.status(200).send("getPost!");
   },
+
   createPost: async (req, res) => {
     /*
 - 게시물을 생성합니다. [V]
@@ -101,6 +82,7 @@ module.exports = {
       }
     }
   },
+
   deletePost: async (req, res) => {
     /*
     ** 에러처리
