@@ -19,7 +19,92 @@ module.exports = {
   },
 
   getPost: async (req, res) => {
-    return res.status(200).send("getPost!");
+    // req.params.id => 해당 게시물의 id
+    const postData = await Board.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
+    if (!postData) {
+      res.status(404).send({
+        message: "존재하지 않는 게시물입니다.",
+      });
+    } else {
+      // console.log("폿트 데이터: ", postData);
+      const writerInfo = await User.findOne({
+        where: {
+          nickname: postData.dataValues.nickname,
+        },
+      });
+
+      const userInfo = verifyAccessToken(req);
+      if (!userInfo) {
+        // 비회원
+        res.status(200).send({
+          id: postData.dataValues.id,
+          userId: writerInfo.dataValues.id,
+          user: {
+            nickname: postData.dataValues.nickname,
+          },
+          title: postData.dataValues.title,
+          content: postData.dataValues.content,
+          likes: postData.dataValues.likes,
+          isLike: false,
+          createdAt: postData.dataValues.createdAt,
+        });
+      } else {
+        // 로그인 성공
+        // 로그인 했으면 해당 유저의 정보를 찾아서 반환
+        const userData = await User.findOne({
+          where: {
+            email: userInfo.email,
+          },
+        });
+        const isLikeData = await likeData.findOne({
+          where: {
+            post_id: postData.dataValues.id,
+            user_id: userData.dataValues.id,
+          },
+        });
+        console.log("이즈라이크: ", isLikeData);
+
+        res.status(200).send({
+          id: postData.dataValues.id,
+          userId: writerInfo.dataValues.id,
+          user: {
+            nickname: postData.dataValues.nickname,
+          },
+          title: postData.dataValues.title,
+          content: postData.dataValues.content,
+          likes: postData.dataValues.likes,
+          isLike: isLikeData.dataValues.isLike,
+          createdAt: postData.dataValues.createdAt,
+        });
+      }
+    }
+    /*
+- 해당 id를 가진 게시물을 반환합니다.
+- 만일 로그인했고, 해당 유저가 게시물에 좋아요를 눌렀을 경우 isLike는 true 값을 가집니다.
+- 로그인을 하지 않았거나, 로그인 했어도 좋아요를 누르지 않았을 경우 isLike는 false 값을 가집니다.
+
+URL `GET` /api/boards/:id
+
+** 에러처리
+해당 번호의 게시물이 없을 경우 404 [V]
+
+{
+	"id": 1,
+	"userId" : 1,
+	"user": {
+		"nickname": "팬더"
+	},
+	"title": "제목입니다",
+	"content": "내용입니다",
+	"like": 0,
+	"isLike": false,
+	"createdAt": "2021-08-01T02:02:00.000Z"
+}
+    */
   },
 
   createPost: async (req, res) => {
@@ -136,10 +221,10 @@ module.exports = {
 };
 
 /*
-1. get list
+1. get list [V]
 2. get a specific post
-3. create a post => 생성 시 post_id
-4. delete a post
+3. create a post => 생성 시 post_id [V]
+4. delete a post [V]
 5. post a like (likeData 내에서 해당 유저의 아이디와 및 post_id와 일치하는 애 찾고, 만약 isLike가 false면 true로 바꿔줌 + 해당 게시물의 좋아요 count도 올림, 이미 true면 에러 메시지 및 카운트X)
 
  */
