@@ -1,9 +1,3 @@
-// import express from "express";
-// import { getList } from "../controller/boards/post.js";
-// import { getPost } from "../controller/boards/post.js";
-// import { createPost } from "../controller/boards/post.js";
-// import { deletePost } from "../controller/boards/post.js";
-// import { likePost } from "../controller/boards/post.js";
 const express = require("express");
 const router = express.Router();
 

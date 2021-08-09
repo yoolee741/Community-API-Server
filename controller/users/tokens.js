@@ -37,26 +37,6 @@ module.exports = {
     return verify(token, REFRESH_SECRET);
   },
 
-  // regenerateAccessToken: function (req, res) {
-  //   const validateRefreshToken = verifyRefreshToken(req);
-  //   if (!validateRefreshToken) {
-  //     res
-  //       .status(401)
-  //       .send({ message: "토큰이 만료되었습니다. 다시 로그인을 해주세요." });
-  //   } else {
-  //     const { email } = validateRefreshToken;
-  //     const findingUser = User.findOne({
-  //       email: email,
-  //     }).then((data) => {
-  //       const newAccessToken = generateAccessToken(data);
-  //       res.status(200).send({
-  //         message: "토큰이 재발급 되었습니다!",
-  //         newAccessToken: newAccessToken,
-  //       });
-  //     });
-  //   }
-  // },
-
   // 비밀번호 유효성 함수도 여기에 포함!
   validatePassword: (str) => {
     let password = str;

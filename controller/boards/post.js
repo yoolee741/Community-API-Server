@@ -19,18 +19,17 @@ module.exports = {
   },
 
   getPost: async (req, res) => {
-    // req.params.id => 해당 게시물의 id
     const postData = await Board.findOne({
       where: {
         id: req.params.id,
       },
     });
+
     if (!postData) {
       res.status(404).send({
         message: "존재하지 않는 게시물입니다.",
       });
     } else {
-      // console.log("폿트 데이터: ", postData);
       const writerInfo = await User.findOne({
         where: {
           nickname: postData.dataValues.nickname,
@@ -66,7 +65,6 @@ module.exports = {
             user_id: userData.dataValues.id,
           },
         });
-        console.log("이즈라이크: ", isLikeData);
 
         res.status(200).send({
           id: postData.dataValues.id,
@@ -92,18 +90,7 @@ URL `GET` /api/boards/:id
 ** 에러처리
 해당 번호의 게시물이 없을 경우 404 [V]
 
-{
-	"id": 1,
-	"userId" : 1,
-	"user": {
-		"nickname": "팬더"
-	},
-	"title": "제목입니다",
-	"content": "내용입니다",
-	"like": 0,
-	"isLike": false,
-	"createdAt": "2021-08-01T02:02:00.000Z"
-}
+
     */
   },
 
@@ -160,7 +147,7 @@ URL `GET` /api/boards/:id
             },
             title: title,
             content: content,
-            like: 0,
+            likes: 0,
             createdAt: newPost.createdAt,
           });
         }
@@ -181,7 +168,6 @@ URL `GET` /api/boards/:id
         message: "유효하지 않은 access token 입니다.",
       });
     } else {
-      // req.params.id => 해당 게시물 아이디
       const userData = await User.findOne({
         where: {
           email: userInfo.email,
@@ -216,15 +202,98 @@ URL `GET` /api/boards/:id
   },
 
   likePost: async (req, res) => {
-    return res.status(200).send("likePost!");
+    // req.params.id => 해당 게시물의 아이디
+    const postData = await Board.findOne({
+      where: {
+        id: req.params.id,
+      },
+    });
+    const writerInfo = await User.findOne({
+      where: {
+        nickname: postData.dataValues.nickname,
+      },
+    });
+    const userInfo = verifyAccessToken(req);
+    if (!userInfo || !req.headers["authorization"]) {
+      // 비회원
+      res.status(401).send({
+        message: "좋아요 기능은 회원만 사용 가능합니다.",
+        id: postData.dataValues.id,
+        userId: writerInfo.dataValues.id,
+        user: {
+          nickname: postData.dataValues.nickname,
+        },
+        title: postData.dataValues.title,
+        content: postData.dataValues.content,
+        likes: postData.dataValues.likes,
+        isLike: false,
+        createdAt: postData.dataValues.createdAt,
+      });
+    } else {
+      // 로그인 성공
+      // 분기: 좋아요 눌렀는지 여부
+      // isLike가 이미 true이면, 메시지 보내기
+      // isLike가 false라면 true로 바꿔주고, Board에 있는 Likes + 1;
+      const userData = await User.findOne({
+        where: {
+          email: userInfo.email,
+        },
+      });
+
+      const isLikeData = await likeData.findOne({
+        where: {
+          post_id: postData.dataValues.id,
+          user_id: userData.dataValues.id,
+        },
+      });
+
+      if (!isLikeData) {
+        const userLike = await likeData.create({
+          post_id: postData.dataValues.id,
+          user_id: userData.dataValues.id,
+          isLike: true,
+        });
+        const addLike = await Board.findOne({
+          where: {
+            id: postData.dataValues.id,
+          },
+        }).then((el) => {
+          el.update({ likes: el.dataValues.likes + 1 });
+
+          res.status(200).send({
+            message: "회원님이 이 게시물을 좋아합니다!",
+            id: postData.dataValues.id,
+            userId: writerInfo.dataValues.id,
+            user: {
+              nickname: postData.dataValues.nickname,
+            },
+            title: postData.dataValues.title,
+            content: postData.dataValues.content,
+            likes: el.dataValues.likes,
+            isLike: true,
+            createdAt: postData.dataValues.createdAt,
+          });
+        });
+      } else {
+        res.status(400).send({
+          message: "이미 '좋아요' 버튼을 눌렀습니다!",
+        });
+      }
+    }
+    /*
+- 해당 id의 게시물에 좋아요를 누를 시 호출하는 API입니다. (좋아요 취소는 없습니다)
+- 게시물 당 유저가 누를 수 있는 좋아요는 최대 1번입니다.
+- 예를 들어 좋아요가 3개인 게시물에 좋아요를 처음 누를 경우, 4가 됩니다.
+- 그 이후 같은 유저가 좋아요를 계속 호출해도 4에서 더 늘어나지 않습니다.
+- 좋아요가 눌린 게시물의 객체가 반환됩니다.
+- 만일 로그인했고, 해당 유저가 게시물에 좋아요를 눌렀을 경우 isLike는 true 값을 가집니다.
+- 로그인을 하지 않았거나, 로그인 했어도 좋아요를 누르지 않았을 경우 isLike는 false 값을 가집니다.
+
+URL `POST` /api/boards/:id/like `인증`
+
+** 에러처리
+- 인증 정보가 없을 경우 401
+
+     */
   },
 };
-
-/*
-1. get list [V]
-2. get a specific post
-3. create a post => 생성 시 post_id [V]
-4. delete a post [V]
-5. post a like (likeData 내에서 해당 유저의 아이디와 및 post_id와 일치하는 애 찾고, 만약 isLike가 false면 true로 바꿔줌 + 해당 게시물의 좋아요 count도 올림, 이미 true면 에러 메시지 및 카운트X)
-
- */
