@@ -1,7 +1,3 @@
-// import express from "express";
-// import bodyParser from "body-parser";
-// import cors from "cors";
-// import { usersRouter, boardsRouter } from "./router/index";
 require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");

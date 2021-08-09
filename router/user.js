@@ -9,5 +9,9 @@ const { usersController } = require("../controller");
 
 router.post("/login", usersController.login.login);
 router.post("/join", usersController.join.join);
+router.post(
+  "/tokens",
+  usersController.regenerateAccessToken.regenerateAccessToken
+);
 
 module.exports = router;
