@@ -61,8 +61,6 @@ module.exports = {
         message: "유효하지 않은 access token 입니다.",
       });
     } else {
-      console.log("유저인포: ", userInfo);
-
       if (!title.length || !content.length) {
         res.status(400).send({
           message: "제목과 내용을 모두 채워주세요.",
@@ -104,8 +102,52 @@ module.exports = {
     }
   },
   deletePost: async (req, res) => {
-    return res.status(200).send("deletePost!");
+    /*
+    ** 에러처리
+- 인증 정보가 없을 경우 `401` [V]
+- 해당 게시물의 작성자가 아닐 경우 `401` [V]
+- 해당 번호의 게시물이 없을 경우 `404` [V]
+     */
+    const userInfo = verifyAccessToken(req);
+    if (!userInfo) {
+      res.status(401).send({
+        message: "유효하지 않은 access token 입니다.",
+      });
+    } else {
+      // req.params.id => 해당 게시물 아이디
+      const userData = await User.findOne({
+        where: {
+          email: userInfo.email,
+        },
+      });
+      const postData = await Board.findOne({
+        where: {
+          id: req.params.id,
+        },
+      });
+      if (!postData) {
+        res.status(404).send({
+          message: "존재하지 않는 게시물입니다.",
+        });
+      } else if (postData.dataValues.nickname !== userData.nickname) {
+        res.status(401).send({
+          message: "작성자가 아니므로 삭제할 수 없습니다.",
+        });
+      } else {
+        const postID = await likeData.findOne({
+          where: {
+            post_id: req.params.id,
+          },
+        });
+        await postID.destroy();
+        await postData.destroy();
+        res.status(200).send({
+          message: "게시물이 삭제되었습니다!",
+        });
+      }
+    }
   },
+
   likePost: async (req, res) => {
     return res.status(200).send("likePost!");
   },
