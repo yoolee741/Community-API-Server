@@ -1,29 +1,61 @@
 const { sign, verify } = require("jsonwebtoken");
-const { user } = require("../../models/user");
+const { User } = require("../../models");
 require("dotenv").config();
 const ACCESS_SECRET = process.env.ACCESS_SECRET;
 const REFRESH_SECRET = process.env.REFRESH_SECRET;
 
 module.exports = {
-  generateAccessToken: async (req, res) => {
-    res.status(200).send("엑세스 생성!");
+  generateAccessToken: function (User) {
+    return sign({ email: User.email }, ACCESS_SECRET, {
+      algorithm: "HS256",
+      expiresIn: "2h",
+    });
   },
 
-  generateRefreshToken: async (req, res) => {
-    res.status(200).send("리프레쉬 생성!");
+  generateRefreshToken: function (User) {
+    return sign({ email: User.email }, REFRESH_SECRET, {
+      algorithm: "HS256",
+      expiresIn: "14d",
+    });
   },
 
-  verifyAccessToken: async (req, res) => {
-    res.status(200).send("엑세스 확인!");
+  verifyAccessToken: function (req) {
+    const authorization = req.headers["authorization"];
+    if (!authorization) {
+      return "not authorized";
+    }
+    const token = authorization.split(" ")[1];
+    return verify(token, ACCESS_SECRET);
   },
 
-  verifyRefreshToken: async (req, res) => {
-    res.status(200).send("리스레쉬 확인!");
+  verifyRefreshToken: function (req) {
+    const authorization = req.headers["authorization"];
+    if (!authorization) {
+      return "유효하지 않은 리프레쉬 토큰입니다.";
+    }
+    const token = authorization.split(" ")[1];
+    return verify(token, REFRESH_SECRET);
   },
 
-  regenerateAccessToken: async (req, res) => {
-    res.status(200).send("리스레쉬 후 로그아웃 || 재발급!");
-  },
+  // regenerateAccessToken: function (req, res) {
+  //   const validateRefreshToken = verifyRefreshToken(req);
+  //   if (!validateRefreshToken) {
+  //     res
+  //       .status(401)
+  //       .send({ message: "토큰이 만료되었습니다. 다시 로그인을 해주세요." });
+  //   } else {
+  //     const { email } = validateRefreshToken;
+  //     const findingUser = User.findOne({
+  //       email: email,
+  //     }).then((data) => {
+  //       const newAccessToken = generateAccessToken(data);
+  //       res.status(200).send({
+  //         message: "토큰이 재발급 되었습니다!",
+  //         newAccessToken: newAccessToken,
+  //       });
+  //     });
+  //   }
+  // },
 
   // 비밀번호 유효성 함수도 여기에 포함!
   validatePassword: (str) => {
