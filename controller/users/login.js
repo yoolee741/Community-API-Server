@@ -3,17 +3,6 @@
 - 이메일과 비밀번호가 일치하면 해당 유저의 JWT 토큰을 발행합니다. [V]
 - Response 값의 user 객체에는 비밀번호 필드를 포함시키지 않습니다. [V]
 
-* Response 예시
-{
-	"token": "eyV1QiLCJhbGciOiJIUzUxM..",
-	"user": {
-		"id": 1,
-		"email": "assignment@example.com",
-    "nickname": "팬더",
-		...
-	}
-}
-
 ** 에러처리
 - 존재하지 않은 이메일일 경우 `403` [V]
 - 비밀번호가 틀렸을 경우 `403` [V]
@@ -58,13 +47,3 @@ module.exports = {
     }
   },
 };
-// * Response 예시
-// {
-// 	"token": "eyV1QiLCJhbGciOiJIUzUxM..",
-// 	"user": {
-// 		"id": 1,
-// 		"email": "assignment@example.com",
-//     "nickname": "팬더",
-// 		...
-// 	}
-// }
